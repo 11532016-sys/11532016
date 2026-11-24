@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>星語占星館｜生日星座與每日運勢</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #090d16;
+      --bg-card: rgba(23, 31, 52, 0.75);
+      --border-glow: rgba(212, 175, 55, 0.35);
+      --gold: #f3c65f;
+      --gold-soft: #ffe7a3;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(ellipse at top, #1b2440 0%, #090d16 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* 右上角「16士」專屬標誌 */
+    .corner-badge {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.5rem;
+      z-index: 50;
+      background: rgba(23, 31, 52, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+      user-select: none;
+    }
+
+    /* 背景星空粒子 */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1.5px 1.5px at 15% 20%, #fff, transparent),
+        radial-gradient(1px 1px at 35% 65%, #fde68a, transparent),
+        radial-gradient(2px 2px at 70% 15%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 85% 50%, #c4b5fd, transparent),
+        radial-gradient(1px 1px at 50% 85%, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 25% 40%, #fff, transparent),
+        radial-gradient(1px 1px at 90% 80%, #fde68a, transparent);
+      background-size: 550px 550px;
+      opacity: 0.65;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 3.5rem 1.25rem 4rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.25rem;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #fff6d6 0%, var(--gold) 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+    }
+
+    /* 生日查詢區 */
+    .finder-box {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-glow);
+      border-radius: 16px;
+      padding: 1.6rem;
+      max-width: 580px;
+      margin: 0 auto 2.5rem;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .finder-box h2 {
+      font-size: 1.12rem;
+      color: var(--gold-soft);
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .finder-controls {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      font-family: inherit;
+      font-size: 0.95rem;
+      border-radius: 10px;
+      padding: 0.65rem 1.05rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    select {
+      background: #111827;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    select:focus {
+      border-color: var(--gold);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #090d16;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      padding: 0.65rem 1.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45);
+    }
+
+    /* 當日星座運勢結果面板 */
+    .detail-panel {
+      background: linear-gradient(145deg, rgba(30, 41, 70, 0.9), rgba(15, 23, 42, 0.95));
+      backdrop-filter: blur(16px);
+      border: 1.5px solid var(--gold);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 2.5rem;
+      display: none;
+      animation: fadeIn 0.35s ease;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+    }
+
+    .detail-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .birthday-banner {
+      display: inline-block;
+      background: rgba(243, 198, 95, 0.16);
+      border: 1px solid rgba(243, 198, 95, 0.4);
+      color: var(--gold-soft);
+      font-size: 0.88rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .detail-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .detail-symbol {
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .detail-title h2 {
+      font-size: 1.75rem;
+      color: var(--gold);
+    }
+
+    .detail-meta {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      background: rgba(243, 198, 95, 0.15);
+      color: var(--gold-soft);
+      border: 1px solid rgba(243, 198, 95, 0.3);
+      margin-right: 0.4rem;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.75rem;
+    }
+
+    @media (max-width: 768px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+      .corner-badge {
+        top: 0.9rem;
+        right: 1rem;
+        font-size: 0.9rem;
+        padding: 0.35rem 0.85rem;
+      }
+    }
+
+    .horoscope-card {
+      background: rgba(9, 13, 22, 0.65);
+      border-radius: 14px;
+      padding: 1.35rem;
+      border: 1px solid rgba(243, 198, 95, 0.3);
+    }
+
+    .horoscope-date {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 0.85rem;
+      display: block;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.55rem;
+      font-size: 0.94rem;
+    }
+
+    .stars-rating {
+      color: var(--gold);
+      letter-spacing: 2px;
+    }
+
+    .lucky-tags {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .lucky-tags span strong {
+      color: var(--text-main);
+    }
+
+    .daily-advice {
+      margin-top: 0.9rem;
+      font-size: 0.92rem;
+      color: #e2e8f0;
+      background: rgba(124, 58, 237, 0.2);
+      padding: 0.85rem;
+      border-radius: 8px;
+      border-left: 3px solid #a78bfa;
+    }
+
+    .info-block h3 {
+      color: var(--gold-soft);
+      font-size: 1.05rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .info-block p {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      margin-bottom: 1.1rem;
+    }
+
+    /* 四象分類按鈕 */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.45rem 1.1rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(243, 198, 95, 0.2);
+      color: var(--gold);
+      border-color: var(--gold);
+    }
+
+    /* 十二星座卡片網格 */
+    .zodiac-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .zodiac-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1.35rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .zodiac-card:hover, .zodiac-card.selected {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+      background: rgba(34, 46, 77, 0.9);
+      box-shadow: 0 8px 24px rgba(243, 198, 95, 0.18);
+    }
+
+    .zodiac-card .icon {
+      font-size: 2.3rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .zodiac-card h3 {
+      font-size: 1.1rem;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+    }
+
+    .zodiac-card .date-range {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3.5rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- 右上角顯示 16士 -->
+  <div class="corner-badge">16士</div>
+
+  <div class="stars"></div>
+
+  <div class="container">
+    <header>
+      <h1>✦ 星語占星館 ✦</h1>
+      <p>輸入生日，立即解鎖你的專屬星座與當日星象運勢</p>
+    </header>
+
+    <!-- 生日輸入區 -->
+    <section class="finder-box">
+      <h2>🎂 請選擇出生月日，產生今日星座運勢</h2>
+      <div class="finder-controls">
+        <select id="birthMonth" aria-label="出生月份" onchange="updateDays()"></select>
+        <select id="birthDay" aria-label="出生日期"></select>
+        <button class="btn-primary" onclick="findZodiacByDate()">產生當日星座運勢</button>
+      </div>
+    </section>
+
+    <!-- 當日星座運勢結果面板 -->
+    <section id="detailPanel" class="detail-panel"></section>
+
+    <!-- 四象篩選列 -->
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterElement('all', this)">全部星座</button>
+      <button class="filter-btn" onclick="filterElement('火象', this)">🔥 火象星座</button>
+      <button class="filter-btn" onclick="filterElement('土象', this)">🌿 土象星座</button>
+      <button class="filter-btn" onclick="filterElement('風象', this)">💨 風象星座</button>
+      <button class="filter-btn" onclick="filterElement('水象', this)">💧 水象星座</button>
+    </div>
+
+    <!-- 十二星座卡片列表 -->
+    <main id="zodiacGrid" class="zodiac-grid"></main>
+
+    <footer>
+      <p>© 2026 星語占星館 · 16士</p>
+    </footer>
+  </div>
+
+  <script>
+    const ZODIAC_DATA = [
+      {
+        id: 'aries', name: '牡羊座', en: 'Aries', symbol: '♈',
+        date: '3/21 - 4/19', element: '火象', ruler: '火星', match: '獅子座、射手座',
+        traits: '熱情衝勁、坦率直爽、勇於開創、行動力極強',
+        desc: '作為黃道十二宮的第一個星座，牡羊座象徵著春天的生機與全新的開始。你天生具備領導魄力與冒險精神，面對挑戰總是第一個挺身而出，不喜歡拖泥帶水。'
+      },
+      {
+        id: 'taurus', name: '金牛座', en: 'Taurus', symbol: '♉',
+        date: '4/20 - 5/20', element: '土象', ruler: '金星', match: '處女座、摩羯座',
+        traits: '穩重踏實、重視質感、堅持到底、值得信賴',
+        desc: '受金星守護的金牛座對美感、美食與生活品質有著敏銳的鑑賞力。你做事循序漸進、腳踏實地，一旦確立目標便會展現驚人的耐力，是朋友眼中最可靠的後盾。'
+      },
+      {
+        id: 'gemini', name: '雙子座', en: 'Gemini', symbol: '♊',
+        date: '5/21 - 6/21', element: '風象', ruler: '水星', match: '天秤座、水瓶座',
+        traits: '機智靈活、好奇心強、善於溝通、適應力佳',
+        desc: '水星賦予雙子座敏捷的思維與出色的表達能力。你對世界充滿好奇，總能快速吸收新知並在各種社交場合游刃有餘，生活裡永遠不缺新鮮點子與幽默感。'
+      },
+      {
+        id: 'cancer', name: '巨蟹座', en: 'Cancer', symbol: '♋',
+        date: '6/22 - 7/22', element: '水象', ruler: '月亮', match: '天蠍座、雙魚座',
+        traits: '溫柔體貼、重視情感、直覺敏銳、充滿保護欲',
+        desc: '受月亮週期影響的巨蟹座擁有細膩的情感與強大的同理心。你非常珍惜家人與摯友，雖然外表偶爾帶著一層保護殼，但內心極為溫暖真誠。'
+      },
+      {
+        id: 'leo', name: '獅子座', en: 'Leo', symbol: '♌',
+        date: '7/23 - 8/22', element: '火象', ruler: '太陽', match: '牡羊座、射手座',
+        traits: '自信大方、慷慨熱情、具舞台魅力、重情重義',
+        desc: '由太陽守護的獅子座天生自帶光芒與王者風範。你做事光明磊落、樂於照顧身邊的人，只要站上舞台就能展現強大的感染力與創造力。'
+      },
+      {
+        id: 'virgo', name: '處女座', en: 'Virgo', symbol: '♍',
+        date: '8/23 - 9/22', element: '土象', ruler: '水星', match: '金牛座、摩羯座',
+        traits: '細心謹慎、邏輯清晰、追求卓越、樂於助人',
+        desc: '處女座擁有精準的分析能力與對細節的高度敏銳。你習慣把事情規劃得井井有條，對自我要求甚高，總能在關鍵時刻發現別人忽略的盲點。'
+      },
+      {
+        id: 'libra', name: '天秤座', en: 'Libra', symbol: '♎',
+        date: '9/23 - 10/23', element: '風象', ruler: '金星', match: '雙子座、水瓶座',
+        traits: '優雅和諧、善解人意、重視公平、審美出眾',
+        desc: '天秤座天生追求人際與生活上的平衡與美感。你擅長傾聽不同立場的聲音，處事圓融得體，是團體中不可或缺的協調者與和平使者。'
+      },
+      {
+        id: 'scorpio', name: '天蠍座', en: 'Scorpio', symbol: '♏',
+        date: '10/24 - 11/22', element: '水象', ruler: '冥王星', match: '巨蟹座、雙魚座',
+        traits: '深沉專注、洞察力強、愛恨分明、意志堅定',
+        desc: '天蠍座擁有洞悉事物本質的敏銳直覺與極強的專注力。你做任何事都全力以赴，對感情忠誠深刻，具備在逆境中浴火重生的強大韌性。'
+      },
+      {
+        id: 'sagittarius', name: '射手座', en: 'Sagittarius', symbol: '♐',
+        date: '11/23 - 12/21', element: '火象', ruler: '木星', match: '牡羊座、獅子座',
+        traits: '樂觀豁達、熱愛自由、喜歡探索、坦誠幽默',
+        desc: '受幸運之星木星守護的射手座渴望知識、旅行與廣闊的世界。你不會被眼前的瑣事困住，總能用樂觀開朗的態度感染周遭，勇敢追尋理想。'
+      },
+      {
+        id: 'capricorn', name: '摩羯座', en: 'Capricorn', symbol: '♑',
+        date: '12/22 - 1/19', element: '土象', ruler: '土星', match: '金牛座、處女座',
+        traits: '自律務實、責任感強、大器晚成、目標明確',
+        desc: '土星賦予摩羯座沉穩的氣質與長遠的眼光。你深信一步一腳印的力量，面對壓力越挫越勇，往往能在專業領域建立無可取代的成就。'
+      },
+      {
+        id: 'aquarius', name: '水瓶座', en: 'Aquarius', symbol: '♒',
+        date: '1/20 - 2/18', element: '風象', ruler: '天王星', match: '雙子座、天秤座',
+        traits: '獨立思考、創意十足、友善博愛、不隨波逐流',
+        desc: '天王星守護的水瓶座擁有前衛的思維與獨特的個人風格。你重視精神自由與智慧交流，常能提出打破常規的創新見解，是天生的改革者。'
+      },
+      {
+        id: 'pisces', name: '雙魚座', en: 'Pisces', symbol: '♓',
+        date: '2/19 - 3/20', element: '水象', ruler: '海王星', match: '巨蟹座、天蠍座',
+        traits: '浪漫感性、富有想像力、溫柔包容、藝術天分',
+        desc: '作為黃道最後一個星座，雙魚座融合了豐富的想像力與深厚的慈悲心。你對藝術、音樂與人心有著細膩的共鳴，總能為世界帶來溫柔的療癒力量。'
+      }
+    ];
+
+    const LUCKY_COLORS = ['星空藍', '琥珀金', '翡翠綠', '珊瑚粉', '薰衣草紫', '象牙白', '酒紅色', '薄荷青'];
+    const DAILY_ADVICES = [
+      '今天適合把心中累積的想法化為實際行動，主動出擊會有意想不到的收穫。',
+      '放慢腳步傾聽內心的聲音，適度留白能幫你做出更清晰的判斷。',
+      '人際互動運勢佳，與老朋友聯繫或參與交流，可能帶來貴人靈感。',
+      '專注於手邊最重要的三件事，避免被瑣碎訊息分散注意力。',
+      '保持開放的心態迎接小變化，今天的小插曲往往藏著好運的伏筆。',
+      '適合整理環境與財務規劃，讓生活恢復秩序能大幅提升你的能量。'
+    ];
+
+    let selectedId = null;
+
+    // 初始化月份與日期下拉選單
+    function initDateSelectors() {
+      const monthSelect = document.getElementById('birthMonth');
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = `${m} 月`;
+        monthSelect.appendChild(opt);
+      }
+      updateDays();
+    }
+
+    // 依所選月份動態更新天數
+    function updateDays() {
+      const month = parseInt(document.getElementById('birthMonth').value, 10);
+      const daySelect = document.getElementById('birthDay');
+      const prevDay = parseInt(daySelect.value, 10) || 1;
+      const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+
+      daySelect.innerHTML = '';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = `${d} 日`;
+        daySelect.appendChild(opt);
+      }
+      daySelect.value = Math.min(prevDay, daysInMonth);
+    }
+
+    // 渲染星座卡片網格
+    function renderGrid(filter = 'all') {
+      const grid = document.getElementById('zodiacGrid');
+      grid.innerHTML = '';
+
+      const filtered = filter === 'all'
+        ? ZODIAC_DATA
+        : ZODIAC_DATA.filter(z => z.element === filter);
+
+      filtered.forEach(sign => {
+        const card = document.createElement('div');
+        card.className = `zodiac-card ${sign.id === selectedId ? 'selected' : ''}`;
+        card.onclick = () => showDetail(sign.id);
+        card.innerHTML = `
+          <span class="icon">${sign.symbol}</span>
+          <h3>${sign.name}</h3>
+          <span class="date-range">${sign.date}</span>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 依四象篩選
+    function filterElement(element, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderGrid(element);
+    }
+
+    // 計算當日運勢（依當天日期與星座產生穩定結果）
+    function getDailyHoroscope(index) {
+      const today = new Date();
+      const dateStr = `${today.getFullYear()} 年 ${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+      const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate() + index * 17;
+
+      const stars = (offset) => {
+        const score = ((seed + offset * 13) % 3) + 3; // 3 ~ 5 顆星
+        return '★'.repeat(score) + '☆'.repeat(5 - score);
+      };
+
+      return {
+        dateStr,
+        overall: stars(1),
+        love: stars(2),
+        career: stars(3),
+        wealth: stars(4),
+        color: LUCKY_COLORS[(seed + index) % LUCKY_COLORS.length],
+        number: ((seed * 7 + index) % 89) + 10,
+        advice: DAILY_ADVICES[(seed + index * 3) % DAILY_ADVICES.length]
+      };
+    }
+
+    // 顯示星座與當日運勢詳情面板
+    function showDetail(id, birthLabel = '') {
+      selectedId = id;
+      const index = ZODIAC_DATA.findIndex(z => z.id === id);
+      const sign = ZODIAC_DATA[index];
+      const daily = getDailyHoroscope(index);
+
+      const bannerHtml = birthLabel
+        ? `<div class="birthday-banner">🎂 查詢生日：<strong>${birthLabel}</strong> ➔ 您的星座為 <strong>${sign.name}</strong></div>`
+        : '';
+
+      const panel = document.getElementById('detailPanel');
+      panel.innerHTML = `
+        ${bannerHtml}
+        <div class="detail-header">
+          <div class="detail-title">
+            <span class="detail-symbol">${sign.symbol}</span>
+            <div>
+              <h2>${sign.name} <small style="font-size:1rem;color:#94a3b8;">${sign.en}</small></h2>
+              <span class="detail-meta">${sign.date}</span>
+            </div>
+          </div>
+          <div>
+            <span class="badge">${sign.element}星座</span>
+            <span class="badge">守護星：${sign.ruler}</span>
+            <span class="badge">速配：${sign.match}</span>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="horoscope-card">
+            <span class="horoscope-date">🔮 當日星座運勢結果（${daily.dateStr}）</span>
+            <div class="stat-row"><span>整體運勢</span><span class="stars-rating">${daily.overall}</span></div>
+            <div class="stat-row"><span>愛情桃花</span><span class="stars-rating">${daily.love}</span></div>
+            <div class="stat-row"><span>事業學業</span><span class="stars-rating">${daily.career}</span></div>
+            <div class="stat-row"><span>財富投資</span><span class="stars-rating">${daily.wealth}</span></div>
+            <div class="lucky-tags">
+              <span>🎨 今日幸運色：<strong>${daily.color}</strong></span>
+              <span>🔢 今日幸運數字：<strong>${daily.number}</strong></span>
+            </div>
+            <div class="daily-advice">💡 <strong>今日開運指引：</strong>${daily.advice}</div>
+          </div>
+
+          <div class="info-block">
+            <h3>✦ 性格關鍵字</h3>
+            <p style="color:var(--gold-soft);font-weight:500;">${sign.traits}</p>
+            <h3>✦ 星座特質解析</h3>
+            <p>${sign.desc}</p>
+          </div>
+        </div>
+      `;
+
+      panel.classList.add('active');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      const activeFilter = document.querySelector('.filter-btn.active');
+      const filterType = activeFilter.textContent.includes('火') ? '火象'
+        : activeFilter.textContent.includes('土') ? '土象'
+        : activeFilter.textContent.includes('風') ? '風象'
+        : activeFilter.textContent.includes('水') ? '水象' : 'all';
+      renderGrid(filterType);
+    }
+
+    // 依輸入生日判斷星座並產生當日運勢
+    function findZodiacByDate() {
+      const m = parseInt(document.getElementById('birthMonth').value, 10);
+      const d = parseInt(document.getElementById('birthDay').value, 10);
+
+      let id = 'capricorn';
+      if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) id = 'aries';
+      else if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) id = 'taurus';
+      else if ((m === 5 && d >= 21) || (m === 6 && d <= 21)) id = 'gemini';
+      else if ((m === 6 && d >= 22) || (m === 7 && d <= 22)) id = 'cancer';
+      else if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) id = 'leo';
+      else if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) id = 'virgo';
+      else if ((m === 9 && d >= 23) || (m === 10 && d <= 23)) id = 'libra';
+      else if ((m === 10 && d >= 24) || (m === 11 && d <= 22)) id = 'scorpio';
+      else if ((m === 11 && d >= 23) || (m === 12 && d <= 21)) id = 'sagittarius';
+      else if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) id = 'capricorn';
+      else if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) id = 'aquarius';
+      else if ((m === 2 && d >= 19) || (m === 3 && d <= 20)) id = 'pisces';
+
+      document.querySelectorAll('.filter-btn').forEach((b, idx) => {
+        b.classList.toggle('active', idx === 0);
+      });
+      showDetail(id, `${m} 月 ${d} 日`);
+    }
+
+    initDateSelectors();
+    renderGrid();
+  </script>
+</body>
+</html>
